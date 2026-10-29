@@ -14,15 +14,15 @@
 | A2 | Average load | 3 | 1.37 | 375 ms | 686 ms | 0.00% | 100% (332/332) |
 | A3 | Stress | 5 | 2.21 | 378 ms | 722 ms | 0.00% | 100% (536/536) |
 | A4 | Spike | 5 | 1.03 | 359 ms | 380 ms | 0.00% | 100% (192/192) |
-| A5 | Soak | 2 | | | | | |
+| A5 | Soak | 2 | 0.98 | 378 ms | 784 ms | 0.00% | 100% (872/872) |
 
 ## Part B
-1.
-2.
-3.
-4.
-5.
-6.
-7.
-8.
-9.
+1. See the results table above (Steps A1 to A5).
+2. In Step 0.2 the rate was 2.42 requests per second, not 5. One iteration is one request plus sleep(1), and the iteration_duration average was 1.85 s (about 0.73 s for the request and 1 s of think time). So one virtual user does only about 0.54 iterations per second, and 5 virtual users give about 2.4 requests per second. The think time keeps each user below one request per second.
+3. The response time did not grow. The p(95) of http_req_duration was 375 ms in the average-load test (3 users) and 378 ms in the stress test (5 users), a difference of only 3 ms, and the max was 686 ms against 722 ms. The request rate grew from 1.37 to 2.21 requests per second as expected, and there were no failures in either test. This means 5 users are still well inside the operational envelope of QuickPizza, so the system answers as fast as at 3 users. A real stress test would push the load above the edge of the envelope to see how the system slows down, but on a shared public site we can test only far inside it.
+4. In the spike test the response time did not rise noticeably when the load jumped from 1 to 5 users in 5 seconds. The max of the whole run was 380 ms and the median was 271 ms, so there was no slow period and no recovery time to measure (about 0 s). A jump from 1 to 5 users is a small spike for this system.
+5. In the soak test the response time and the error rate did not get worse. Over the 11 minutes the p(95) was 378 ms, the max was 784 ms and the failed rate was 0.00%. In the report the response time in the first minutes was about [...] ms and in the last minutes about [...] ms, so it was [stable / not rising]. A soak test of several hours could reveal a memory leak, connections that are never released until the pool is exhausted, or a disk or log that slowly fills up.
+6. The average hides the slowest requests. The p(95) is the time that 95% of requests beat, so it shows what the slower users experience. For example, in Step 0.7 the median was 485 ms and the average 568 ms, but the p(95) was 1.52 s, and only the percentile showed that some users waited much longer.
+7. First, a lab system does not have internet latency, so the response times would be lower. Second, a lab system is not shared with other users. QuickPizza is used by learners all over the world, so its response time changes from run to run (my p(95) was 537.9 ms in one run and 1.75 s in another run of the same script), while in a lab the load and the environment can be controlled and the numbers repeat better.
+8. A stress, spike or breakpoint test with hundreds of users can overload the site, slow it down or crash it, and harm its real users. It looks the same as a denial-of-service attack, which can be illegal without written permission from the owner.
+9. Vague requirement: "The food ordering app is slow when many people order." Testable requirement: "With 50 users at the same time for 5 minutes, the menu page answers 95% of requests within 2 seconds, and fewer than 1% of requests fail." K6 thresholds: http_req_duration: ['p(95)<2000'], http_req_failed: ['rate<0.01'] (with stages up to 50 users and a 5 minute hold; not to be run against a site I do not own).
