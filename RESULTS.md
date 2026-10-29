@@ -2,8 +2,8 @@
 
 ## Part 0
 - Step 0.1, http_req_duration: 377.2 ms (avg = min = med = max = p(90) = p(95), because the run sent only 1 request)
-- Step 0.2, requests, rate and p(95), and why the rate stays below 5:
-- Step 0.6, exit code of the normal run and of the run with P95=300:
+- Step 0.2, requests, rate and p(95), and why the rate stays below 5: 58 requests, 2.42 requests per second, p(95) = 2.23 s. One iteration is one request plus sleep(1). The iteration_duration average was 1.85 s (the request took 0.73 s on average, plus the 1 s sleep). So each virtual user finishes only about 0.54 iterations per second, and 5 virtual users give about 2.4 requests per second, not 5. The rate is also averaged over the whole 24 s of the run, which includes the last iterations finishing after the 20 s duration.
+- Step 0.6, exit code of the normal run and of the run with P95=300: normal run exit code = 0 (p(95) = 537.9 ms, below 1500 ms, and all three thresholds passed). Run with P95=300 exit code = 99. The rule p(95)<300 showed a cross because the measured p(95) was 1.75 s, so K6 printed that the thresholds on http_req_duration have been crossed. The p(95) differed a lot between the two runs (537.9 ms and 1.75 s) because QuickPizza is a shared public site.
 - Step 0.7, rules that passed, p(95), p(99), exit code after your change:
 - Step 0.8, what was wrong, and how the checks showed it:
 
